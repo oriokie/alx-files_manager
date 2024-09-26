@@ -94,5 +94,5 @@ npm test
 
 ## Authors
 
-Edwin Orioki Kenyansa
-Clifford Karimi Muriuki Karimi
+- Edwin Orioki Kenyansa
+- Clifford Karimi Muriuki Karimi
