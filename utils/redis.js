@@ -1,4 +1,4 @@
-import { createClient } from 'redis';
+import redis from 'redis';
 import { promisify } from 'util';
 
 /**
@@ -12,7 +12,7 @@ class RedisClient {
    * Also sets up promisified methods
    */
   constructor() {
-    this.client = createClient();
+    this.client = redis.createClient();
     this.client.on('error', (error) => {
       console.log(`Redis client error: ${error}`);
     });
@@ -27,10 +27,7 @@ class RedisClient {
    * @returns {boolean} true if connected, false otherwise
    */
   isAlive() {
-    if (this.client.connected) {
-      return true;
-    }
-    return false;
+    return this.client.connected;
   }
 
   /**
@@ -64,4 +61,5 @@ class RedisClient {
 }
 
 const redisClient = new RedisClient();
-export default redisClient;
+
+module.exports = redisClient;
