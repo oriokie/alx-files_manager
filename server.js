@@ -2,7 +2,11 @@ const express = require('express');
 const routes = require('./routes');
 
 const app = express();
-const port = process.env.port;
+
+/**
+ * Env variable or port 5000 if not set
+ */
+const port = process.env.PORT || 8080;
 
 app.use(express.json());
 app.use('/', routes);
@@ -10,3 +14,8 @@ app.use('/', routes);
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+
+/**
+ * Exporting the app module
+ */
+module.exports = app;
