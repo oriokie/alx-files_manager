@@ -26,6 +26,8 @@ class DBClient {
         console.error('MongoDB connection error:', err);
       } else {
         this.db = this.client.db(database);
+        this.filesCollection = this.db.collection('files');
+        this.usersCollection = this.db.collection('users');
       }
     });
   }
@@ -68,20 +70,6 @@ class DBClient {
       console.error('Error counting files: ', err);
       return 0;
     }
-  }
-
-  /**
-   * Refrence to the files collection
-   */
-  async filesCollection() {
-    return this.db.collection('files');
-  }
-
-  /**
-   * Refrence to the users collection
-   */
-  async usersCollection() {
-    return this.db.collection('users');
   }
 }
 

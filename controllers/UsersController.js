@@ -33,16 +33,9 @@ exports.postNew = async (req, res) => {
 };
 
 exports.getMe = async (req, res) => {
-  const token = req.get('X-Token');
-
-  const userId = await redisClient.get(`auth_${token}`);
-
-  const user = await dbClient.client
-    .db(dbClient.database)
-    .collection('users')
-    .findOne({ _id: ObjectID(userId) });
+  const user = await dbClient.usersCollection.findOne({ _id: ObjectID(req.userId) });
   if (!user) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    return res.status(404).json({ error: 'User not found' });
   }
   return res.status(200).json({ id: user._id.toString(), email: user.email });
 };
