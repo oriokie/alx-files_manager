@@ -69,6 +69,20 @@ class DBClient {
       return 0;
     }
   }
+
+  /**
+   * Refrence to the files collection
+   */
+  async filesCollection() {
+    return this.db.collection('files');
+  }
+
+  /**
+   * Refrence to the users collection
+   */
+  async usersCollection() {
+    return this.db.collection('users');
+  }
 }
 
 const dbClient = new DBClient();
