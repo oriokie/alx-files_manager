@@ -26,6 +26,8 @@ class DBClient {
         console.error('MongoDB connection error:', err);
       } else {
         this.db = this.client.db(database);
+        this.filesCollection = this.db.collection('files');
+        this.usersCollection = this.db.collection('users');
       }
     });
   }
@@ -72,4 +74,5 @@ class DBClient {
 }
 
 const dbClient = new DBClient();
-export default dbClient;
+
+module.exports = dbClient;
