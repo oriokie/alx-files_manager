@@ -25,6 +25,5 @@ router.put('/files/:id/publish', authenticateToken, FilesController.putPublish);
 router.put('/files/:id/unpublish', authenticateToken, FilesController.putUnpublish);
 router.get('/files/:id/data', FilesController.getFile);
 
-
 // importing router
 module.exports = router;

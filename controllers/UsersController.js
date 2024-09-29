@@ -1,11 +1,11 @@
 const sha1 = require('sha1');
-const dbClient = require('../utils/db');
 const { ObjectId } = require('mongodb');
+const dbClient = require('../utils/db');
 
 exports.postNew = async (req, res) => {
   try {
-    const email = req.body.email;
-    const password = req.body.password;
+    const { email } = req.body;
+    const { password } = req.body;
 
     if (!email) {
       return res.status(400).json({ error: 'Missing email' });
