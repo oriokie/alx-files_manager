@@ -1,10 +1,10 @@
 const { v4: uuidv4 } = require('uuid');
+const sha1 = require('sha1');
 const redisClient = require('../utils/redis');
 const dbClient = require('../utils/db');
-const sha1 = require('sha1');
 
 exports.getConnect = async (req, res) => {
-  const authorization = req.headers.authorization;
+  const { authorization } = req.headers;
   const [email, password] = Buffer.from(authorization.split(' ')[1], 'base64').toString().split(':');
   const user = await dbClient.client.db(dbClient.database).collection('users').findOne({ email, password: sha1(password) });
 

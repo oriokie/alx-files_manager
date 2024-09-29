@@ -30,7 +30,9 @@ class FilesController {
    */
   static async postUpload(req, res) {
     // get the file data from the request
-    const { name, type, parentId = '0', isPublic = false, data } = req.body;
+    const {
+      name, type, parentId = '0', isPublic = false, data,
+    } = req.body;
 
     // Check if the request contains the name, type and data
     if (!name) {
@@ -140,7 +142,10 @@ class FilesController {
       return res.status(404).json({ error: 'Not found' });
     }
 
-    await dbClient.filesCollection.updateOne({ _id: ObjectId(fileId) }, { $set: { isPublic: true } });
+    await dbClient.filesCollection.updateOne(
+      { _id: ObjectId(fileId) },
+      { $set: { isPublic: true } },
+    );
     const updatedFile = await dbClient.filesCollection.findOne({ _id: ObjectId(fileId) });
     return res.status(200).json(updatedFile);
   }
@@ -159,7 +164,10 @@ class FilesController {
       return res.status(404).json({ error: 'Not found' });
     }
 
-    await dbClient.filesCollection.updateOne({ _id: ObjectId(fileId) }, { $set: { isPublic: false } });
+    await dbClient.filesCollection.updateOne(
+      { _id: ObjectId(fileId) },
+      { $set: { isPublic: false } },
+    );
     const updatedFile = await dbClient.filesCollection.findOne({ _id: ObjectId(fileId) });
     return res.status(200).json(updatedFile);
   }
@@ -172,15 +180,14 @@ class FilesController {
     const fileFilter = {
       _id: new mongoDBCore.BSON.ObjectId(isValidId(id) ? id : NULL_ID),
     };
-    const file = await (await dbClient.filesCollection())
-      .findOne(fileFilter);
+    const file = await (await dbClient.filesCollection()).findOne(fileFilter);
 
-    if (!file || (!file.isPublic && (file.userId.toString() !== userId))) {
+    if (!file || (!file.isPublic && file.userId.toString() !== userId)) {
       res.status(404).json({ error: 'Not found' });
       return;
     }
     if (file.type === VALID_FILE_TYPES.folder) {
-      res.status(400).json({ error: 'A folder doesn\'t have content' });
+      res.status(400).json({ error: "A folder doesn't have content" });
       return;
     }
     let filePath = file.localPath;
@@ -202,7 +209,5 @@ class FilesController {
     res.status(200).sendFile(absoluteFilePath);
   }
 }
-
-
 
 module.exports = FilesController;
