@@ -114,7 +114,7 @@ class FilesController {
   static async getIndex(req, res) {
     const parentId = req.query.parentId || '0';
     const page = req.query.page || 0;
-    const limit = req.query.limit || 20;
+    const limit = 20;
 
     const query = {
       parentId: parentId === '0' ? '0' : ObjectId(parentId),
