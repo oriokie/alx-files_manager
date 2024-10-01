@@ -5,8 +5,13 @@ const dbClient = require('../utils/db');
 
 exports.getConnect = async (req, res) => {
   const { authorization } = req.headers;
-  const [email, password] = Buffer.from(authorization.split(' ')[1], 'base64').toString().split(':');
-  const user = await dbClient.client.db(dbClient.database).collection('users').findOne({ email, password: sha1(password) });
+  const [email, password] = Buffer.from(authorization.split(' ')[1], 'base64')
+    .toString()
+    .split(':');
+  const user = await dbClient.client
+    .db(dbClient.database)
+    .collection('users')
+    .findOne({ email, password: sha1(password) });
 
   if (!user) {
     return res.status(401).json({ error: 'Unauthorized' });

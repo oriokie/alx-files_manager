@@ -23,7 +23,7 @@ router.get('/files/:id', authenticateToken, FilesController.getShow);
 router.get('/files', authenticateToken, FilesController.getIndex);
 router.put('/files/:id/publish', authenticateToken, FilesController.putPublish);
 router.put('/files/:id/unpublish', authenticateToken, FilesController.putUnpublish);
-router.get('/files/:id/data', FilesController.getFile);
+router.get('/files/:id/data', authenticateToken, FilesController.getFile);
 
 // importing router
 module.exports = router;

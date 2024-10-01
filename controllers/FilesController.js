@@ -2,7 +2,11 @@ const { v4: uuidv4 } = require('uuid');
 const { ObjectId } = require('mongodb');
 const fs = require('fs');
 const path = require('path');
+const mime = require('mime-types');
+const Bull = require('bull');
 const dbClient = require('../utils/db');
+
+const fileQueue = new Bull('fileQueue');
 
 const FOLDER_PATH = process.env.FOLDER_PATH || '/tmp/files_manager';
 
@@ -30,9 +34,7 @@ class FilesController {
    */
   static async postUpload(req, res) {
     // get the file data from the request
-    const {
-      name, type, parentId = '0', isPublic = false, data,
-    } = req.body;
+    const { name, type, parentId = '0', isPublic = false, data } = req.body;
 
     // Check if the request contains the name, type and data
     if (!name) {
@@ -70,6 +72,13 @@ class FilesController {
       const result = await dbClient.filesCollection.insertOne(newFile);
       newFile.id = result.insertedId;
       return res.status(201).json(newFile);
+    }
+
+    if (newFile.type === 'image') {
+      await fileQueue.add({
+        userId: newFile.userId.toString(),
+        fileId: newFile._id.toString(),
+      });
     }
 
     // Handle file upload
@@ -144,7 +153,7 @@ class FilesController {
 
     await dbClient.filesCollection.updateOne(
       { _id: ObjectId(fileId) },
-      { $set: { isPublic: true } },
+      { $set: { isPublic: true } }
     );
     const updatedFile = await dbClient.filesCollection.findOne({ _id: ObjectId(fileId) });
     return res.status(200).json(updatedFile);
@@ -166,47 +175,63 @@ class FilesController {
 
     await dbClient.filesCollection.updateOne(
       { _id: ObjectId(fileId) },
-      { $set: { isPublic: false } },
+      { $set: { isPublic: false } }
     );
     const updatedFile = await dbClient.filesCollection.findOne({ _id: ObjectId(fileId) });
     return res.status(200).json(updatedFile);
   }
 
+  /**
+   * getFile - function to handle the get file
+   */
   static async getFile(req, res) {
-    const user = await getUserFromXToken(req);
-    const { id } = req.params;
-    const size = req.query.size || null;
-    const userId = user ? user._id.toString() : '';
-    const fileFilter = {
-      _id: new mongoDBCore.BSON.ObjectId(isValidId(id) ? id : NULL_ID),
-    };
-    const file = await (await dbClient.filesCollection()).findOne(fileFilter);
+    try {
+      const fileId = req.params.id;
+      const { size } = req.query;
+      const { userId } = req; // From auth middleware
 
-    if (!file || (!file.isPublic && file.userId.toString() !== userId)) {
-      res.status(404).json({ error: 'Not found' });
-      return;
-    }
-    if (file.type === VALID_FILE_TYPES.folder) {
-      res.status(400).json({ error: "A folder doesn't have content" });
-      return;
-    }
-    let filePath = file.localPath;
-    if (size) {
-      filePath = `${file.localPath}_${size}`;
-    }
-    if (existsSync(filePath)) {
-      const fileInfo = await statAsync(filePath);
-      if (!fileInfo.isFile()) {
-        res.status(404).json({ error: 'Not found' });
-        return;
+      const file = await dbClient.filesCollection.findOne({ _id: new ObjectId(fileId) });
+
+      if (!file) {
+        return res.status(404).json({ error: 'Not found' });
       }
-    } else {
-      res.status(404).json({ error: 'Not found' });
-      return;
+
+      if (!file.isPublic && (!userId || file.userId.toString() !== userId)) {
+        return res.status(404).json({ error: 'Not found' });
+      }
+
+      if (file.type === 'folder') {
+        return res.status(400).json({ error: "A folder doesn't have content" });
+      }
+
+      let filePath;
+      if (size && ['100', '250', '500'].includes(size) && file.type === 'image') {
+        filePath = path.join(
+          process.env.FOLDER_PATH || '/tmp/files_manager',
+          `${file.localPath}_${size}`
+        );
+      } else {
+        filePath = path.join(process.env.FOLDER_PATH || '/tmp/files_manager', file.localPath);
+      }
+
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: 'Not found' });
+      }
+
+      const mimeType = mime.lookup(file.name) || 'application/octet-stream';
+      res.setHeader('Content-Type', mimeType);
+
+      const fileStream = fs.createReadStream(filePath);
+      fileStream.pipe(res);
+
+      // return statement to satisfy the linter
+      return new Promise((resolve) => {
+        fileStream.on('end', () => resolve());
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: 'Internal server error' });
     }
-    const absoluteFilePath = await realpathAsync(filePath);
-    res.setHeader('Content-Type', contentType(file.name) || 'text/plain; charset=utf-8');
-    res.status(200).sendFile(absoluteFilePath);
   }
 }
 

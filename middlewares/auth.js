@@ -14,6 +14,7 @@ const authenticateToken = async (req, res, next) => {
   // If authentication is successful, attach the userId to the request object
   req.userId = userId;
   next();
+  return null;
 };
 
 module.exports = authenticateToken;
